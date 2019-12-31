@@ -375,3 +375,283 @@ impl FromStateAtBlock<standard::Standard> for (NewStandard, Vec<NewStandardVersi
         (db_standard, db_versions)
     }
 }
+
+mod tests {
+    use super::*;
+
+    const PUBLIC_KEY: &str = "test_public_key";
+    const ORG_ID: &str = "test_org";
+    const CERT_ORG_ID: &str = "test_cert_org";
+    const FACTORY_ID: &str = "test_factory";
+    const STANDARDS_BODY_ID: &str = "test_standards_body";
+    const CERT_ID: &str = "test_cert";
+    const REQUEST_ID: &str = "test_request";
+    const STANDARD_ID: &str = "test_standard";
+
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid cert body, accreditation, auth, and contact
+    fn test_cert_body_at_block() {
+        let new_org = NewOrganization {
+            organization_id: CERT_ORG_ID.to_string(),
+            name: "test".to_string(),
+            organization_type: OrganizationTypeEnum::CertifyingBody,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let new_accreditation = NewAccreditation {
+            organization_id: CERT_ORG_ID.to_string(),
+            standard_id: STANDARD_ID.to_string(),
+            standard_version: "test".to_string(),
+            accreditor_id: "test".to_string(),
+            valid_from: 1,
+            valid_to: 2,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+
+        let new_auth = NewAuthorization {
+            organization_id: CERT_ORG_ID.to_string(),
+            public_key: PUBLIC_KEY.to_string(),
+            role: RoleEnum::Admin,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+
+        let new_contact = NewContact {
+            organization_id: CERT_ORG_ID.to_string(),
+            name: "test".to_string(),
+            phone_number: "test".to_string(),
+            language_code: "test".to_string(),
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let (state_org, state_accreditation, state_address, state_auth, state_contact) =
+            FromStateAtBlock::at_block(1, &make_certifying_body());
+        assert_eq!(state_org, new_org);
+        assert_eq!(state_accreditation, Some(vec![new_accreditation]));
+        assert_eq!(state_address, None);
+        assert_eq!(state_auth, vec![new_auth]);
+        assert_eq!(state_contact, vec![new_contact]);
+    }
+
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid factory, contact, and address
+    fn test_factory_at_block() {
+        let new_org = NewOrganization {
+            organization_id: FACTORY_ID.to_string(),
+            name: "test".to_string(),
+            organization_type: OrganizationTypeEnum::Factory,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+
+        let new_contact = NewContact {
+            organization_id: FACTORY_ID.to_string(),
+            name: "test".to_string(),
+            phone_number: "test".to_string(),
+            language_code: "test".to_string(),
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+
+        let new_address = NewAddress {
+            organization_id: FACTORY_ID.to_string(),
+            street_line_1: "test".to_string(),
+            street_line_2: None,
+            city: "test".to_string(),
+            state_province: Some("test".to_string()),
+            country: "test".to_string(),
+            postal_code: Some("test".to_string()),
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let (state_org, state_accreditation, state_address, state_auth, state_contact) =
+            FromStateAtBlock::at_block(1, &make_factory());
+        assert_eq!(state_org, new_org);
+        assert_eq!(state_accreditation, None);
+        assert_eq!(state_address, Some(new_address));
+        assert_eq!(state_auth, vec![]);
+        assert_eq!(state_contact, vec![new_contact]);
+    }
+
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid agent
+    fn test_agent_at_block() {
+        let new_agent = NewAgent {
+            public_key: PUBLIC_KEY.to_string(),
+            organization_id: Some(ORG_ID.to_string()),
+            name: "test".to_string(),
+            timestamp: 1,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let from_state: NewAgent = FromStateAtBlock::at_block(1, &make_agent());
+        assert_eq!(from_state, new_agent);
+    }
+
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid certificate
+    fn test_certificate_at_block() {
+        let new_cert = NewCertificate {
+            certificate_id: CERT_ID.to_string(),
+            certifying_body_id: CERT_ORG_ID.to_string(),
+            factory_id: FACTORY_ID.to_string(),
+            standard_id: STANDARD_ID.to_string(),
+            standard_version: "test".to_string(),
+            valid_from: 1,
+            valid_to: 2,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let from_state: NewCertificate = FromStateAtBlock::at_block(1, &make_certificate());
+        assert_eq!(from_state, new_cert);
+    }
+
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid request
+    fn test_request_at_block() {
+        let new_request = NewRequest {
+            request_id: REQUEST_ID.to_string(),
+            factory_id: FACTORY_ID.to_string(),
+            standard_id: STANDARD_ID.to_string(),
+            status: RequestStatusEnum::Open,
+            request_date: 1,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let from_state: NewRequest = FromStateAtBlock::at_block(1, &make_request());
+        assert_eq!(from_state, new_request);
+    }
+
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid standard and version
+    fn test_standard_at_block() {
+        let new_standard = NewStandard {
+            standard_id: STANDARD_ID.to_string(),
+            organization_id: STANDARDS_BODY_ID.to_string(),
+            name: "test".to_string(),
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+
+        let new_standard_version = NewStandardVersion {
+            standard_id: STANDARD_ID.to_string(),
+            version: "test".to_string(),
+            link: "test".to_string(),
+            description: "test".to_string(),
+            approval_date: 1,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let from_state: (NewStandard, Vec<NewStandardVersion>) =
+            FromStateAtBlock::at_block(1, &make_standard());
+        assert_eq!(from_state, (new_standard, vec![new_standard_version]));
+    }
+
+    fn make_agent() -> agent::Agent {
+        let mut new_agent = agent::Agent::new();
+        new_agent.set_public_key(PUBLIC_KEY.to_string());
+        new_agent.set_organization_id(ORG_ID.to_string());
+        new_agent.set_name("test".to_string());
+        new_agent.set_timestamp(1);
+
+        new_agent
+    }
+
+    fn make_certifying_body() -> organization::Organization {
+        let mut new_org = organization::Organization::new();
+        new_org.set_id(CERT_ORG_ID.to_string());
+        new_org.set_name("test".to_string());
+        new_org.set_organization_type(organization::Organization_Type::CERTIFYING_BODY);
+
+        let mut new_contact = organization::Organization_Contact::new();
+        new_contact.set_name("test".to_string());
+        new_contact.set_phone_number("test".to_string());
+        new_contact.set_language_code("test".to_string());
+        new_org.set_contacts(protobuf::RepeatedField::from_vec(vec![new_contact]));
+
+        let mut new_accreditation = organization::CertifyingBody_Accreditation::new();
+        new_accreditation.set_standard_id(STANDARD_ID.to_string());
+        new_accreditation.set_standard_version("test".to_string());
+        new_accreditation.set_accreditor_id("test".to_string());
+        new_accreditation.set_valid_from(1);
+        new_accreditation.set_valid_to(2);
+        let mut new_details = organization::CertifyingBody::new();
+        new_details.set_accreditations(protobuf::RepeatedField::from_vec(vec![new_accreditation]));
+        new_org.set_certifying_body_details(new_details);
+
+        let mut new_auth = organization::Organization_Authorization::new();
+        new_auth.set_public_key(PUBLIC_KEY.to_string());
+        new_auth.set_role(organization::Organization_Authorization_Role::ADMIN);
+        new_org.set_authorizations(protobuf::RepeatedField::from_vec(vec![new_auth]));
+
+        new_org
+    }
+
+    fn make_factory() -> organization::Organization {
+        let mut new_org = organization::Organization::new();
+        new_org.set_id(FACTORY_ID.to_string());
+        new_org.set_name("test".to_string());
+        new_org.set_organization_type(organization::Organization_Type::FACTORY);
+
+        let mut new_contact = organization::Organization_Contact::new();
+        new_contact.set_name("test".to_string());
+        new_contact.set_phone_number("test".to_string());
+        new_contact.set_language_code("test".to_string());
+        new_org.set_contacts(protobuf::RepeatedField::from_vec(vec![new_contact]));
+
+        let mut new_address = organization::Factory_Address::new();
+        new_address.set_street_line_1("test".to_string());
+        new_address.set_city("test".to_string());
+        new_address.set_state_province("test".to_string());
+        new_address.set_country("test".to_string());
+        new_address.set_postal_code("test".to_string());
+        let mut new_details = organization::Factory::new();
+        new_details.set_address(new_address);
+        new_org.set_factory_details(new_details);
+
+        new_org
+    }
+
+    fn make_certificate() -> certificate::Certificate {
+        let mut new_certificate = certificate::Certificate::new();
+        new_certificate.set_id(CERT_ID.to_string());
+        new_certificate.set_certifying_body_id(CERT_ORG_ID.to_string());
+        new_certificate.set_factory_id(FACTORY_ID.to_string());
+        new_certificate.set_standard_id(STANDARD_ID.to_string());
+        new_certificate.set_standard_version("test".to_string());
+        new_certificate.set_valid_from(1);
+        new_certificate.set_valid_to(2);
+
+        new_certificate
+    }
+
+    fn make_request() -> request::Request {
+        let mut request = request::Request::new();
+        request.set_id(REQUEST_ID.to_string());
+        request.set_status(request::Request_Status::OPEN);
+        request.set_standard_id(STANDARD_ID.to_string());
+        request.set_factory_id(FACTORY_ID.to_string());
+        request.set_request_date(1);
+
+        request
+    }
+
+    fn make_standard() -> standard::Standard {
+        let mut new_standard_version = standard::Standard_StandardVersion::new();
+        new_standard_version.set_version("test".to_string());
+        new_standard_version.set_description("test".to_string());
+        new_standard_version.set_link("test".to_string());
+        new_standard_version.set_approval_date(1);
+
+        let mut new_standard = standard::Standard::new();
+        new_standard.set_id(STANDARD_ID.to_string());
+        new_standard.set_name("test".to_string());
+        new_standard.set_organization_id(STANDARDS_BODY_ID.to_string());
+        new_standard.set_versions(protobuf::RepeatedField::from_vec(vec![
+            new_standard_version,
+        ]));
+
+        new_standard
+    }
+}
