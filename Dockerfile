@@ -1,4 +1,4 @@
-FROM target/consensource-rust:1.38
+FROM target/consensource-rust:stable
 
 COPY . /state_delta_subscriber
 WORKDIR state_delta_subscriber
