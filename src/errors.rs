@@ -9,6 +9,7 @@ pub enum SubscriberError {
 }
 
 impl std::fmt::Display for SubscriberError {
+    #[cfg_attr(tarpaulin, skip)]
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
             SubscriberError::ConnError(ref err) => {
@@ -23,6 +24,7 @@ impl std::fmt::Display for SubscriberError {
 }
 
 impl std::error::Error for SubscriberError {
+    #[cfg_attr(tarpaulin, skip)]
     fn description(&self) -> &str {
         match *self {
             SubscriberError::ConnError(ref err) => err,
@@ -30,7 +32,7 @@ impl std::error::Error for SubscriberError {
             SubscriberError::DBError(ref err) => err.description(),
         }
     }
-
+    #[cfg_attr(tarpaulin, skip)]
     fn cause(&self) -> Option<&dyn std::error::Error> {
         match *self {
             SubscriberError::ConnError(_) => None,
@@ -41,6 +43,7 @@ impl std::error::Error for SubscriberError {
 }
 
 impl From<SubscriberError> for String {
+    #[cfg_attr(tarpaulin, skip)]
     fn from(err: SubscriberError) -> String {
         match err {
             SubscriberError::ConnError(ref err) => format!("Error connecting to validator {}", err),
@@ -51,6 +54,7 @@ impl From<SubscriberError> for String {
 }
 
 impl From<DatabaseError> for SubscriberError {
+    #[cfg_attr(tarpaulin, skip)]
     fn from(err: DatabaseError) -> SubscriberError {
         SubscriberError::DBError(err)
     }

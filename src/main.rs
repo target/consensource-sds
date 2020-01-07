@@ -28,6 +28,7 @@ use subscriber::Subscriber;
 /// Establish a connection with the reporting database and fetches
 /// all known block ids that are already in the Database
 /// Starts the subscriber passing the know blocks ids
+#[cfg_attr(tarpaulin, skip)]
 fn main() {
     let matches = clap_app!(creg_subscriber =>
         (version: crate_version!())
