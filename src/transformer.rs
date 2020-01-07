@@ -14,6 +14,7 @@ where
 
     /// Transforms this Container of Protobuf messages to a type that implements
     /// FromStateAtBlock for that message.
+    #[cfg_attr(tarpaulin, skip)]
     fn to_models<D>(&self, at_block_num: i64) -> Vec<D>
     where
         D: FromStateAtBlock<S>,
