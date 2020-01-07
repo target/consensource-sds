@@ -1,4 +1,4 @@
-# ConsenSource state delta subscriber [![Build Status](https://travis-ci.org/target/consensource-sds.svg?branch=master)](https://travis-ci.org/target/consensource-sds) ![Coveralls github](https://img.shields.io/coveralls/github/target/consensource-sds)
+# ConsenSource state delta subscriber [![Build Status](https://travis-ci.org/target/consensource-sds.svg?branch=master)](https://travis-ci.org/target/consensource-sds) [![Coverage Status](https://img.shields.io/coveralls/github/target/consensource-sds)](https://coveralls.io/github/target/consensource-sds?branch=master)
 
 The state delta subscriber (SDS), also referred to as state delta export, provides a mechanism for exporting on-chain state values from a [Sawtooth validator](https://sawtooth.hyperledger.org/docs/core/releases/latest/cli/sawtooth-validator.html) to an external data store (e.g. a Postgres database). This allows applications to efficiently query their state values.
 
