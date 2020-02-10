@@ -88,7 +88,7 @@ impl EventHandler {
             .last()
             .unwrap_or_else(|| {
                 Err(SubscriberError::EventParseError(
-                    "No block event found".to_string(),
+                    "Could not parse block event".to_string(),
                 ))
             })
     }
