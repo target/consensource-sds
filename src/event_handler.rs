@@ -33,7 +33,7 @@ impl EventHandler {
         }
         self.data_manager
             .execute_operations_in_block(operations, &block)?;
-        info!("Successfully submited event data to reporting database");
+        info!("Successfully submitted event data to reporting database");
         Ok(())
     }
 
