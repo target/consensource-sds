@@ -27,15 +27,29 @@ impl EventHandler {
 
     pub fn handle_events(&self, data: &[u8]) -> Result<(), SubscriberError> {
         let (block, operations) = self.parse_events(data)?;
+        // Handle empty event from sawtooth-settings-tp heartbeat pings
+        if block.block_id == "" && operations.is_empty() {
+            return Ok::<(), SubscriberError>(());
+        }
         self.data_manager
             .execute_operations_in_block(operations, &block)?;
-        info!("Successfully submited event data to reporting database");
+        info!("Successfully submitted event data to reporting database");
         Ok(())
     }
 
     fn parse_events(&self, data: &[u8]) -> Result<(Block, Vec<OperationType>), SubscriberError> {
         let event_list: EventList = Self::unpack_data(data);
         let events = event_list.get_events().to_vec();
+        // Handle empty event from sawtooth-settings-tp heartbeat pings
+        if events.is_empty() {
+            return Ok::<(Block, Vec<OperationType>), SubscriberError>((
+                Block {
+                    block_num: 0,
+                    block_id: "".to_string(),
+                },
+                Vec::<OperationType>::new(),
+            ));
+        }
         let block = self.parse_block(&events)?;
         let state_changes = self.parse_state_delta_events(&events)?;
         let mut operations = Vec::<OperationType>::new();
@@ -74,7 +88,7 @@ impl EventHandler {
             .last()
             .unwrap_or_else(|| {
                 Err(SubscriberError::EventParseError(
-                    "No block event found".to_string(),
+                    "Could not parse block event".to_string(),
                 ))
             })
     }
