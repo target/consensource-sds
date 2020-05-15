@@ -1,5 +1,5 @@
 use common::addressing::{get_address_type, get_family_namespace_prefix, AddressSpace};
-use common::proto::{agent, certificate, organization, request, standard};
+use common::proto::{agent, assertion, certificate, organization, request, standard};
 use database::{
     custom_types::*,
     data_manager::{DataManager, OperationType, MAX_BLOCK_NUM},
@@ -61,7 +61,7 @@ impl EventHandler {
 
     fn parse_block(&self, events: &[Event]) -> Result<Block, SubscriberError> {
         events
-            .into_iter()
+            .iter()
             .filter(|e| e.get_event_type() == "sawtooth/block-commit")
             .map(|block_commit_event| {
                 let block_num: Vec<Event_Attribute> = block_commit_event
@@ -99,7 +99,7 @@ impl EventHandler {
     ) -> Result<Vec<StateChange>, SubscriberError> {
         let namespace_regex = self.get_namespace_regex();
         Ok(events
-            .into_iter()
+            .iter()
             .filter(|e| e.get_event_type() == "sawtooth/state-delta")
             .flat_map(|event| {
                 let mut change_list = Self::unpack_data::<StateChangeList>(event.get_data());
@@ -173,6 +173,13 @@ impl EventHandler {
                     OperationType::CreateStandard(standard_container.to_models(block.block_num));
                 Ok(transaction)
             }
+            AddressSpace::Assertion => {
+                let assertion_container: assertion::AssertionContainer =
+                    Self::unpack_data(state.get_value());
+                let transaction =
+                    OperationType::CreateAssertion(assertion_container.to_models(block.block_num));
+                Ok(transaction)
+            }
             AddressSpace::AnotherFamily => Err(SubscriberError::EventParseError(
                 "Address didnt match any existent state data
                 types in the Certificate Registry Namespace."
@@ -207,6 +214,7 @@ impl FromStateAtBlock<organization::Organization>
                     OrganizationTypeEnum::StandardsBody
                 }
                 organization::Organization_Type::FACTORY => OrganizationTypeEnum::Factory,
+                organization::Organization_Type::INGESTION => OrganizationTypeEnum::Ingestion,
                 organization::Organization_Type::UNSET_TYPE => OrganizationTypeEnum::UnsetType,
             },
             start_block_num: block_num,
@@ -390,6 +398,30 @@ impl FromStateAtBlock<standard::Standard> for (NewStandard, Vec<NewStandardVersi
     }
 }
 
+containerize!(assertion::Assertion, assertion::AssertionContainer);
+impl FromStateAtBlock<assertion::Assertion> for NewAssertion {
+    fn at_block(block_num: i64, assertion: &assertion::Assertion) -> Self {
+        NewAssertion {
+            assertion_id: assertion.get_id().to_string(),
+            assertor_pub_key: assertion.get_assertor_pub_key().to_string(),
+            assertion_type: match assertion.get_assertion_type() {
+                assertion::Assertion_Type::STANDARD => AssertionTypeEnum::Standard,
+                assertion::Assertion_Type::CERTIFICATE => AssertionTypeEnum::Certificate,
+                assertion::Assertion_Type::FACTORY => AssertionTypeEnum::Factory,
+                assertion::Assertion_Type::UNSET_TYPE => AssertionTypeEnum::UnsetType,
+            },
+            object_id: assertion.get_object_id().to_string(),
+            data_id: match assertion.get_data_id() {
+                "" => None,
+                _ => Some(assertion.get_data_id().to_string()),
+            },
+            start_block_num: block_num,
+            end_block_num: MAX_BLOCK_NUM,
+        }
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -401,6 +433,7 @@ mod tests {
     const CERT_ID: &str = "test_cert";
     const REQUEST_ID: &str = "test_request";
     const STANDARD_ID: &str = "test_standard";
+    const ASSERTION_ID: &str = "test_assertion";
 
     #[test]
     /// Test that FromStateAtBlock::at_block returns a valid cert body, accreditation, auth, and contact
@@ -562,6 +595,22 @@ mod tests {
         assert_eq!(from_state, (new_standard, vec![new_standard_version]));
     }
 
+    #[test]
+    /// Test that FromStateAtBlock::at_block returns a valid assertion
+    fn test_assertion_at_block() {
+        let new_assertion = NewAssertion {
+            assertion_id: ASSERTION_ID.to_string(),
+            assertor_pub_key: PUBLIC_KEY.to_string(),
+            assertion_type: AssertionTypeEnum::Factory,
+            object_id: FACTORY_ID.to_string(),
+            data_id: None,
+            start_block_num: 1,
+            end_block_num: MAX_BLOCK_NUM,
+        };
+        let from_state: NewAssertion = FromStateAtBlock::at_block(1, &make_assertion());
+        assert_eq!(from_state, new_assertion);
+    }
+
     fn make_agent() -> agent::Agent {
         let mut new_agent = agent::Agent::new();
         new_agent.set_public_key(PUBLIC_KEY.to_string());
@@ -667,5 +716,15 @@ mod tests {
         ]));
 
         new_standard
+    }
+
+    fn make_assertion() -> assertion::Assertion {
+        let mut assertion = assertion::Assertion::new();
+        assertion.set_id(ASSERTION_ID.to_string());
+        assertion.set_assertor_pub_key(PUBLIC_KEY.to_string());
+        assertion.set_assertion_type(assertion::Assertion_Type::FACTORY);
+        assertion.set_object_id(FACTORY_ID.to_string());
+
+        assertion
     }
 }

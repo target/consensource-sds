@@ -52,7 +52,7 @@ fn main() {
     let _logger = match matches.occurrences_of("verbose") {
         1 => simple_logger::init_with_level(LogLevel::Info),
         2 => simple_logger::init_with_level(LogLevel::Debug),
-        0 | _ => simple_logger::init_with_level(LogLevel::Warn),
+        _ => simple_logger::init_with_level(LogLevel::Warn),
     };
 
     let dsn = format!(
