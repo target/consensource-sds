@@ -25,14 +25,6 @@ impl std::fmt::Display for SubscriberError {
 
 impl std::error::Error for SubscriberError {
     #[cfg_attr(tarpaulin, skip)]
-    fn description(&self) -> &str {
-        match *self {
-            SubscriberError::ConnError(ref err) => err,
-            SubscriberError::EventParseError(ref err) => err,
-            SubscriberError::DBError(ref err) => err.description(),
-        }
-    }
-    #[cfg_attr(tarpaulin, skip)]
     fn cause(&self) -> Option<&dyn std::error::Error> {
         match *self {
             SubscriberError::ConnError(_) => None,
