@@ -125,7 +125,7 @@ dependencies = [
 [[package]]
 name = "common"
 version = "0.1.0"
-source = "git+https://github.com/target/consensource-common.git#2d3ce536e47a8e2558c6106174de2d5716acac26"
+source = "git+https://github.com/target/consensource-common.git#b233a894a265b0ae2a2e56a6880d244085f57722"
 dependencies = [
  "glob",
  "protobuf",
@@ -174,9 +174,10 @@ dependencies = [
 [[package]]
 name = "database"
 version = "0.1.0"
-source = "git+https://github.com/target/consensource-database.git#35f02f1699323b58dc1454a19e5cac48da5fb905"
+source = "git+https://github.com/target/consensource-database.git#9f6452cac1afa39ef2f676384c7ebd6aa6df91f1"
 dependencies = [
  "diesel",
+ "diesel_full_text_search",
  "log 0.3.9",
  "r2d2",
  "r2d2-diesel",
@@ -205,6 +206,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "diesel_full_text_search"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ad3168d9d2008c58b8c9fabb79ddc38d1f9d511fa15e0dcbd6b987912b05783"
+dependencies = [
+ "diesel",
 ]
 
 [[package]]
@@ -550,33 +560,34 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "2.15.1"
+version = "2.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4951a8253c06334be9fe320bbcf73f14949fde62a0c8128d697eec1ff0fa8cd"
+checksum = "cb14183cc7f213ee2410067e1ceeadba2a7478a59432ff0747a335202798b1e2"
 
 [[package]]
 name = "protobuf-codegen"
-version = "2.15.1"
+version = "2.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5682cd7a093d1d5c3cbcb9cd4c3c6e4f3cab4c2e4834f9a08e7a1086f88a4f6b"
+checksum = "3360a1e017386e7d9fc65f7425bef9bcf1e62871f8b5a7b0570ef2ff5073f9a0"
 dependencies = [
  "protobuf",
 ]
 
 [[package]]
 name = "protoc"
-version = "2.15.1"
+version = "2.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a535d7d3fed4966b44cacbd17538cf10b5b1725ab99d969fe6cdda168f82cba"
+checksum = "93daf2f02fa5b0fca2798a24c5a77b6e0d262dc9c386335e04ddbd25ca8237e9"
 dependencies = [
- "log 0.4.8",
+ "log 0.3.9",
+ "which",
 ]
 
 [[package]]
 name = "protoc-rust"
-version = "2.15.1"
+version = "2.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d87291ba46359549b11c2996189f0db26f3285f97c76fe8983aba1a877623e4"
+checksum = "61d4df67d09fc026da7cdf2d039e0340d4a09775f65d4216762886d2f1a1f245"
 dependencies = [
  "protobuf",
  "protobuf-codegen",
@@ -944,6 +955,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "thiserror"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dfdd070ccd8ccb78f4ad66bf1982dc37f620ef696c6b5028fe2ed83dd3d0d08"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd80fc12f73063ac132ac92aceea36734f04a1d93c1240c6944e23a3b8841793"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "thread-id"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1058,6 +1089,16 @@ name = "wasi"
 version = "0.9.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cccddf32554fecc6acb585f82a32a72e28b48f8c4c1883ddfeeeaa96f7d8e519"
+
+[[package]]
+name = "which"
+version = "4.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87c14ef7e1b8b8ecfc75d5eca37949410046e66f15d185c01d70824f1f8111ef"
+dependencies = [
+ "libc",
+ "thiserror",
+]
 
 [[package]]
 name = "winapi"
