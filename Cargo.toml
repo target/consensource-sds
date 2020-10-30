@@ -4,7 +4,7 @@ version = "0.1.0"
 
 [dependencies]
 clap = "2"
-sawtooth-sdk = "0.2"
+sawtooth-sdk = "0.3"
 log = "0.3"
 log4rs = "0.8"
 simple_logger = "0.4"
