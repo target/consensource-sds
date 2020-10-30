@@ -8,7 +8,7 @@ use database::{
 use protobuf;
 use regex::Regex;
 use sawtooth_sdk::messages::events::{Event, EventList, Event_Attribute};
-use sawtooth_sdk::messages::transaction_receipt::{StateChange, StateChangeList, StateChange_Type};
+use sawtooth_sdk::messages::transaction_receipt::{StateChange, StateChangeList};
 
 use transformer::{Container, FromStateAtBlock};
 
@@ -173,27 +173,13 @@ impl EventHandler {
                     OperationType::CreateStandard(standard_container.to_models(block.block_num));
                 Ok(transaction)
             }
-            AddressSpace::Assertion => match state.get_field_type() {
-                StateChange_Type::SET => {
-                    let assertion_container: assertion::AssertionContainer =
-                        Self::unpack_data(state.get_value());
-                    let transaction = OperationType::CreateAssertion(
-                        assertion_container.to_models(block.block_num),
-                    );
-                    Ok(transaction)
-                }
-                StateChange_Type::DELETE => {
-                    let assertion_container: assertion::AssertionContainer =
-                        Self::unpack_data(state.get_value());
-                    let transaction = OperationType::DeleteAssertion(
-                        assertion_container.to_models(block.block_num),
-                    );
-                    Ok(transaction)
-                }
-                StateChange_Type::TYPE_UNSET => Err(SubscriberError::EventParseError(
-                    "StateChange for Assertion had TYPE_UNSET".to_string(),
-                )),
-            },
+            AddressSpace::Assertion => {
+                let assertion_container: assertion::AssertionContainer =
+                    Self::unpack_data(state.get_value());
+                let transaction =
+                    OperationType::CreateAssertion(assertion_container.to_models(block.block_num));
+                Ok(transaction)
+            }
             AddressSpace::AnotherFamily => Err(SubscriberError::EventParseError(
                 "Address didnt match any existent state data
                 types in the Certificate Registry Namespace."
