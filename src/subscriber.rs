@@ -85,8 +85,8 @@ impl Subscriber {
 
                 while self.active.load(Ordering::SeqCst) {
                     let messaged_received = self.receiver.recv_timeout(Duration::from_millis(1000));
-                    if messaged_received.is_ok() {
-                        let received = messaged_received.unwrap().expect("Unexpected error");
+                    if let Ok(messaged_received) = messaged_received {
+                        let received = messaged_received.expect("Unexpected error");
                         self.event_handler.handle_events(received.get_content())?;
                     }
                 }

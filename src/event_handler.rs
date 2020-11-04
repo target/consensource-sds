@@ -8,7 +8,7 @@ use database::{
 use protobuf;
 use regex::Regex;
 use sawtooth_sdk::messages::events::{Event, EventList, Event_Attribute};
-use sawtooth_sdk::messages::transaction_receipt::{StateChange, StateChangeList};
+use sawtooth_sdk::messages::transaction_receipt::{StateChange, StateChangeList, StateChange_Type};
 
 use transformer::{Container, FromStateAtBlock};
 
@@ -173,13 +173,26 @@ impl EventHandler {
                     OperationType::CreateStandard(standard_container.to_models(block.block_num));
                 Ok(transaction)
             }
-            AddressSpace::Assertion => {
-                let assertion_container: assertion::AssertionContainer =
-                    Self::unpack_data(state.get_value());
-                let transaction =
-                    OperationType::CreateAssertion(assertion_container.to_models(block.block_num));
-                Ok(transaction)
-            }
+            AddressSpace::Assertion => match state.get_field_type() {
+                StateChange_Type::SET => {
+                    let assertion_container: assertion::AssertionContainer =
+                        Self::unpack_data(state.get_value());
+                    let transaction = OperationType::CreateAssertion(
+                        assertion_container.to_models(block.block_num),
+                    );
+                    Ok(transaction)
+                }
+                StateChange_Type::DELETE => {
+                    let transaction = OperationType::DeleteAssertion(
+                        state.get_address().to_string(),
+                        block.block_num,
+                    );
+                    Ok(transaction)
+                }
+                StateChange_Type::TYPE_UNSET => Err(SubscriberError::EventParseError(
+                    "StateChange for Assertion had TYPE_UNSET".to_string(),
+                )),
+            },
             AddressSpace::AnotherFamily => Err(SubscriberError::EventParseError(
                 "Address didnt match any existent state data
                 types in the Certificate Registry Namespace."
@@ -403,6 +416,7 @@ impl FromStateAtBlock<assertion::Assertion> for NewAssertion {
     fn at_block(block_num: i64, assertion: &assertion::Assertion) -> Self {
         NewAssertion {
             assertion_id: assertion.get_id().to_string(),
+            address: assertion.get_address().to_string(),
             assertor_pub_key: assertion.get_assertor_pub_key().to_string(),
             assertion_type: match assertion.get_assertion_type() {
                 assertion::Assertion_Type::STANDARD => AssertionTypeEnum::Standard,
@@ -434,6 +448,7 @@ mod tests {
     const REQUEST_ID: &str = "test_request";
     const STANDARD_ID: &str = "test_standard";
     const ASSERTION_ID: &str = "test_assertion";
+    const ASSERTION_ADDRESS: &str = "some_state_address";
 
     #[test]
     /// Test that FromStateAtBlock::at_block returns a valid cert body, accreditation, auth, and contact
@@ -600,6 +615,7 @@ mod tests {
     fn test_assertion_at_block() {
         let new_assertion = NewAssertion {
             assertion_id: ASSERTION_ID.to_string(),
+            address: ASSERTION_ADDRESS.to_string(),
             assertor_pub_key: PUBLIC_KEY.to_string(),
             assertion_type: AssertionTypeEnum::Factory,
             object_id: FACTORY_ID.to_string(),
@@ -721,6 +737,7 @@ mod tests {
     fn make_assertion() -> assertion::Assertion {
         let mut assertion = assertion::Assertion::new();
         assertion.set_id(ASSERTION_ID.to_string());
+        assertion.set_address(ASSERTION_ADDRESS.to_string());
         assertion.set_assertor_pub_key(PUBLIC_KEY.to_string());
         assertion.set_assertion_type(assertion::Assertion_Type::FACTORY);
         assertion.set_object_id(FACTORY_ID.to_string());
