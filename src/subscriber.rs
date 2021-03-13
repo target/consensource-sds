@@ -1,7 +1,8 @@
+use crate::errors::SubscriberError;
+use crate::event_handler::EventHandler;
+
 use common::addressing::get_family_namespace_prefix;
-use errors::SubscriberError;
-use event_handler::EventHandler;
-use protobuf;
+use protobuf::Message;
 use sawtooth_sdk::messages::client_event::{
     ClientEventsSubscribeRequest, ClientEventsSubscribeResponse,
     ClientEventsSubscribeResponse_Status, ClientEventsUnsubscribeRequest,
@@ -76,7 +77,7 @@ impl Subscriber {
             .get()
             .map_err(|err| SubscriberError::ConnError(err.to_string()))?;
         let response: ClientEventsSubscribeResponse =
-            protobuf::parse_from_bytes(&future_result.get_content())
+            Message::parse_from_bytes(&future_result.get_content())
                 .expect("Error parsing protobuf data.");
         match response.get_status() {
             ClientEventsSubscribeResponse_Status::OK => {
@@ -134,7 +135,7 @@ impl Subscriber {
             .get()
             .map_err(|err| SubscriberError::ConnError(err.to_string()))?;
         let response: ClientEventsUnsubscribeResponse =
-            protobuf::parse_from_bytes(&future_result.get_content())
+            Message::parse_from_bytes(&future_result.get_content())
                 .expect("Error parsing protobuf data.");
         match response.get_status() {
             ClientEventsUnsubscribeResponse_Status::OK => {

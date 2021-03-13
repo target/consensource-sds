@@ -1,3 +1,7 @@
+use crate::containerize;
+use crate::errors::SubscriberError;
+use crate::transformer::{Container, FromStateAtBlock};
+
 use common::addressing::{get_address_type, get_family_namespace_prefix, AddressSpace};
 use common::proto::{agent, assertion, certificate, organization, request, standard};
 use database::{
@@ -5,14 +9,10 @@ use database::{
     data_manager::{DataManager, OperationType, MAX_BLOCK_NUM},
     models::*,
 };
-use protobuf;
+use protobuf::Message;
 use regex::Regex;
 use sawtooth_sdk::messages::events::{Event, EventList, Event_Attribute};
 use sawtooth_sdk::messages::transaction_receipt::{StateChange, StateChangeList, StateChange_Type};
-
-use transformer::{Container, FromStateAtBlock};
-
-use errors::SubscriberError;
 
 /// Given a connection to the reporting database, it parses the event data received from the
 /// subscriber and adds that data to reporting DB.
@@ -121,7 +121,7 @@ impl EventHandler {
     where
         T: protobuf::Message,
     {
-        protobuf::parse_from_bytes(&data).expect("Error parsing protobuf data.")
+        Message::parse_from_bytes(&data).expect("Error parsing protobuf data.")
     }
 
     /// Given a state change it deserializes the data to a protobuf message,
