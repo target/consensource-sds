@@ -32,7 +32,7 @@ macro_rules! containerize {
         containerize!($val_type, $container_type, entries);
     };
     ($val_type:path, $container_type:path, $container_field:ident) => {
-        impl ::transformer::Container<$val_type> for $container_type {
+        impl crate::transformer::Container<$val_type> for $container_type {
             fn values(&self) -> &[$val_type] {
                 &self.$container_field
             }

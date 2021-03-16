@@ -1,23 +1,12 @@
 #[macro_use]
-extern crate clap;
-#[macro_use]
 extern crate log;
-extern crate common;
-extern crate ctrlc;
-extern crate database;
-extern crate protobuf;
-extern crate regex;
-extern crate sawtooth_sdk;
-extern crate simple_logger;
-extern crate uuid;
 
-#[macro_use]
-mod transformer;
 mod errors;
+mod event_handler;
+mod subscriber;
+mod transformer;
 
-pub mod event_handler;
-pub mod subscriber;
-
+use clap::{clap_app, crate_version};
 use database::data_manager::DataManager;
 use event_handler::EventHandler;
 use log::LogLevel;

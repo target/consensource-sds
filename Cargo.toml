@@ -1,6 +1,9 @@
 [package]
 name = "consensource-sds"
 version = "0.1.0"
+description = "An event subscriber for publishing blockchain events to an off-chain reporting database."
+authors = ["Target"]
+edition = "2018"
 
 [dependencies]
 clap = "2"
