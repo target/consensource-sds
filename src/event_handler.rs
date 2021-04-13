@@ -374,6 +374,7 @@ impl FromStateAtBlock<request::Request> for NewRequest {
                 request::Request_Status::CLOSED => RequestStatusEnum::Closed,
                 request::Request_Status::CERTIFIED => RequestStatusEnum::Certified,
                 request::Request_Status::UNSET_STATUS => RequestStatusEnum::UnsetStatus,
+                request::Request_Status::PRE_CERTIFIED => RequestStatusEnum::PreCertified,
             },
             request_date: request.get_request_date() as i64,
             start_block_num: block_num,
